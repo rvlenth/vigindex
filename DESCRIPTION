@@ -9,6 +9,7 @@ Description: Reads special indexing tags from R Markdown vignette
     with links to the sections that are tagged.
 License: GPL-2 | GPL-3
 URL: https://github.com/rvlenth/vigindex
+BugReports: https://github.com/rvlenth/vigindex/issues
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

@@ -104,8 +104,10 @@ vigindex = function(dir = "vignettes",
     if (file.exists(targ.file))
         buffer = scan(targ.file, what = "", sep = "\n",
                       blank.lines.skip = FALSE)
-    else
-        buffer = default_head
+    else {
+        pkgname = rev(strsplit(getwd(), "/")[[1]])[1]
+        buffer = gsub("<pkgname>", pkgname, default_head)
+    }
     top.end = grep("^<!--", buffer) # Look for 1st comment line
     if (length(top.end) >= 1)
         buffer = c(buffer[seq_len(top.end[1])], "")
@@ -123,6 +125,7 @@ vigindex = function(dir = "vignettes",
 
 # Heading of vignette file if none provided
 default_head = c("---", "title: \"Index of vignette topics\"",
+                 "author: \"<pkgname> package\"",
                  "output: rmarkdown::html_vignette", "vignette: >",
                  "  %\\VignetteIndexEntry{Index of vignette topics}",
                  "  %\\VignetteEngine{knitr::rmarkdown}",

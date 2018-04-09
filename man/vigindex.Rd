@@ -5,7 +5,8 @@
 \title{Generate a vignette topical index.}
 \usage{
 vigindex(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"),
-  target = "vignette-topics.Rmd")
+  target = "vignette-topics.Rmd", navigation = c("auto", "none", "fourths",
+  "letters"), taglines)
 }
 \arguments{
 \item{dir}{character name of directory where vignettes are stored}
@@ -19,6 +20,17 @@ If \code{target} already exists, it will be replaced,
 except that the initial part of it will be kept as-is.
 Also, \code{target} is excluded from being indexed,
 even if it is listed in \code{vignettes}.}
+
+\item{navigation}{character value determining whether links/anchors should be
+added to assist in jumping to other places in the index. If \code{"none"},
+no navigation is added; if \code{"fourths"}, navigation points are placed
+at four roughly equally-spaced ponts in the index. If \code{"letters"},
+they are placed at the beginning of each new beginning letter. If
+\code{"auto"}, it is determined by the number of main entries.}
+
+\item{taglines}{character vector of lines that are added to the
+end of the index. If not supplied, it adds a promotional link for
+the \pkg{vigindex}  package.}
 }
 \value{
 Nothing is returned, but the contents of \code{target} are

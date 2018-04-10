@@ -2,11 +2,21 @@
 % Please edit documentation in R/vig-idx.R
 \name{vigindex}
 \alias{vigindex}
+\alias{compile_vi}
+\alias{add_navigation}
+\alias{write_vi}
 \title{Generate a vignette topical index.}
 \usage{
 vigindex(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"),
   target = "vignette-topics.Rmd", navigation = c("auto", "none", "fourths",
   "letters"), taglines)
+
+compile_vi(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"))
+
+add_navigation(tree, navigation = c("auto", "none", "fourths", "letters"))
+
+write_vi(tree, dir = getwd("vignettes"), target = "vignette-topics.Rmd",
+  taglines)
 }
 \arguments{
 \item{dir}{character name of directory where vignettes are stored}
@@ -31,19 +41,33 @@ they are placed at the beginning of each new beginning letter. If
 \item{taglines}{character vector of lines that are added to the
 end of the index. If not supplied, it adds a promotional link for
 the \pkg{vigindex}  package.}
+
+\item{tree}{An index tree such as is returned by \code{compile_vi};
+see details under Value.}
 }
 \value{
 Nothing is returned, but the contents of \code{target} are
   created or altered, and a message indicates when it is complete.
+
+\code{compile_vi} returns a tree structure with the compiled index.
+  It consists of a named \code{list} of nodes. The names serve as sorting
+  keys for the nodes. Each node is in turn a named list with three elements:
+  \code{text} is a vector of character strings for the entry and any
+  subentries. \code{link} is the character link to associate with the last
+  element of \code{text}. And \code{children} is a named list of nodes of the
+  same form as \code{tree}, containing any subsentries.
 }
 \description{
 Read indexing tags from a set of R-Markdown vignettes and create
 a new vignette with topic names and links to the tagged locations.
 }
 \details{
-In ordinary package development, the default areguments will
-index all of the package's vignettes and create an index source file
-named \code{"vignette-topics.Rmd"}.
+The \code{vigindex} function does everything in one call; in ordinary package
+development, using it with the default areguments will index all of the
+package's vignettes and create an index source file named
+\code{"vignette-topics.Rmd"}. If the user wants more control over the
+process, they may call (in order): \code{compile_vi},
+\code{add_navigation} (optionally), and \code{write_vi}.
 
 If the target file does not exist, one is created.
 The user may edit the target file once created. The function looks
@@ -98,7 +122,7 @@ form \code{\{#anchor\}}) found
 in the document, or to the top of the file if no anchors occur
 before the index tag.
 
-Because Markdown only allows anchors with headings,
+Because Markdown only allows anchors at headings,
 the links will be fairly crude, and users are advised to use
 a lot of sectioning in writing vignettes.
 }

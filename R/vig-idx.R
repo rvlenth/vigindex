@@ -5,9 +5,12 @@
 #' Read indexing tags from a set of R-Markdown vignettes and create
 #' a new vignette with topic names and links to the tagged locations.
 #'
-#' In ordinary package development, the default areguments will
-#' index all of the package's vignettes and create an index source file
-#' named \code{"vignette-topics.Rmd"}.
+#' The \code{vigindex} function does everything in one call; in ordinary package
+#' development, using it with the default areguments will index all of the
+#' package's vignettes and create an index source file named
+#' \code{"vignette-topics.Rmd"}. If the user wants more control over the
+#' process, they may call (in order): \code{compile_vi},
+#' \code{add_navigation} (optionally), and \code{write_vi}.
 #'
 #' If the target file does not exist, one is created.
 #' The user may edit the target file once created. The function looks
@@ -82,21 +85,37 @@
 #' in the document, or to the top of the file if no anchors occur
 #' before the index tag.
 #'
-#' Because Markdown only allows anchors with headings,
+#' Because Markdown only allows anchors at headings,
 #' the links will be fairly crude, and users are advised to use
 #' a lot of sectioning in writing vignettes.
+#'
 vigindex = function(dir = "vignettes",
                     vignettes = dir(dir, pattern = "*.Rmd"),
                     target = "vignette-topics.Rmd",
                     navigation = c("auto", "none", "fourths", "letters"),
                     taglines) {
-    vignettes = setdiff(vignettes, target) # exclude target
-    navigation = match.arg(navigation)
+    tree = compile_vi(dir, vignettes)
+    tree = add_navigation(tree, navigation)
+    write_vi(tree, dir, target, taglines)
+}
+
+#' @rdname vigindex
+#' @export
+#' @return \code{compile_vi} returns a tree structure with the compiled index.
+#'   It consists of a named \code{list} of nodes. The names serve as sorting
+#'   keys for the nodes. Each node is in turn a named list with three elements:
+#'   \code{text} is a vector of character strings for the entry and any
+#'   subentries. \code{link} is the character link to associate with the last
+#'   element of \code{text}. And \code{children} is a named list of nodes of the
+#'   same form as \code{tree}, containing any subsentries.
+#'
+compile_vi = function(dir = "vignettes",
+                    vignettes = dir(dir, pattern = "*.Rmd")) {
     tree = list()
     for (vig in vignettes) {
         n.ent = 0
-        cat(paste(vig, "...\n"))
-        buffer = scan(paste(dir, vig, sep = "/"), what = "", sep = "\n")
+        cat(paste(vig, "..."))
+        buffer = scan(paste(dir, vig, sep = "/"), what = "", sep = "\n", quiet = TRUE)
         entlist = find_vientries(buffer)
         ext = substring(vig, regexpr("\\.", vig))
         vig.html = sub(ext, ".html", vig)
@@ -111,18 +130,62 @@ vigindex = function(dir = "vignettes",
         }
         message(n.ent, " entries processed\n")
     }
+    tree
+}
 
-    # hack to allow me to save a generated tree for testing/development
-    # .save.tree.name is character name to save the tree in the global env
-    if(exists(".save.tree.name", envir = .GlobalEnv))
-        assign(.save.tree.name, tree, envir = .GlobalEnv)
+#' @alias add_navigation
+#' @rdname vigindex
+#' @param tree An index tree such as is returned by \code{compile_vi};
+#'        see details under Value.
+#' @export
+add_navigation = function(tree, navigation = c("auto", "none", "fourths", "letters")) {
+    navigation = match.arg(navigation)
+    if (navigation == "auto") {
+        len = length(tree)
+        navigation = ifelse(len <=25, "none",
+                            ifelse(len <= 125, "fourths", "letters"))
+    }
+    keys = sort(tolower(names(tree)))
+    ltrs = unique(substring(keys, 1, 1))
+    if (navigation == "fourths") {
+        findprev = function(chr)
+            max(1, which(ltrs == chr) - 1)
+        beg = keys[1 + as.integer(length(keys)*c(0, .25, .5, .75))]
+        beg = substring(beg, 1, 1)
+        end = ltrs[c(sapply(beg[-1], findprev), length(ltrs))]
+        begnav = paste0("[", toupper(beg), "--", toupper(end), "](#", beg, ")")
+        beghead = paste0("\n\n### ", toupper(beg), "--", toupper(end), " {#", beg, "}\n\n")
+        topnav = paste0("\n\n### Jump to: (",
+                        paste(begnav, collapse = ") ("), ") {#topnav}\n\n@ ")
+    }
+    else if (navigation == "letters") {
+        beg = ltrs[ltrs %in% letters]
+        begnav = paste0("[", toupper(ltrs), "](#", ltrs, ")")
+        beghead = paste0("\n\n### ", toupper(ltrs), " {#", ltrs, "}\n\n")
+        topnav = paste("\n\n### Jump to: ",
+                       paste(begnav, collapse = " "), " {#topnav}\n\n@ ")
+    }
+    if (navigation != "none") {
+        gototop = "\n\n[Back to top](#topnav)"
+        tree = insert_entry(tree, topnav)
+        tree = insert_entry(tree, paste0(beghead[1], "@", beg[1]))
+        for (i in (1 + seq_along(beghead[-1]))) {
+            tree = insert_entry(tree, paste0(gototop, beghead[i], "@", beg[i]))
+        }
+        tree = insert_entry(tree, paste0(gototop, "@zzzzz"))
+    }
+    tree
+}
 
-    tree = add.navigation(tree, navigation)
+#' @rdname vigindex
+#' @export
+write_vi = function(tree, dir = getwd("vignettes"),
+                    target = "vignette-topics.Rmd", taglines) {
     targ.file = paste(dir, target, sep = "/")
     cat("\nPreparing index file ...\n")
     if (file.exists(targ.file))
         buffer = scan(targ.file, what = "", sep = "\n",
-                      blank.lines.skip = FALSE)
+                      blank.lines.skip = FALSE, quiet = TRUE)
     else {
         pkgname = rev(strsplit(getwd(), "/")[[1]])[1]
         buffer = gsub("<pkgname>", pkgname, default_head)
@@ -145,16 +208,19 @@ vigindex = function(dir = "vignettes",
     invisible()
 }
 
+
 # Heading of vignette file if none provided
 default_head = c("---", "title: \"Index of vignette topics\"",
-                 "author: \"<pkgname> package\"",
-                 "output: rmarkdown::html_vignette", "vignette: >",
-                 "  %\\VignetteIndexEntry{Index of vignette topics}",
-                 "  %\\VignetteEngine{knitr::rmarkdown}",
-                 "  %\\VignetteEncoding{UTF-8}", "---",
-                 "**Note:** Links take you to the beginnings of sections or subsections ",
-                 "where these topics occur.",
-                 "<!-- End of header. Do not delete this comment -->")
+     "author: \"<pkgname> package\"",
+     "output: rmarkdown::html_document",
+     "vignette: >",
+     "  %\\VignetteIndexEntry{Index of vignette topics}",
+     "  %\\VignetteEngine{knitr::rmarkdown}",
+     "  %\\VignetteEncoding{UTF-8}", "---",
+     "<style type=\"text/css\"> ul {list-style-type: none;} </style>",
+     "**Note:** Links take you to the beginnings of sections or subsections ",
+     "where these topics occur.",
+     "<!-- You may edit above but not below here. Do not delete this comment -->")
 
 
 # Create a new vignette-index entry
@@ -267,40 +333,3 @@ find_vientries = function(buffer) {
     })
 }
 
-add.navigation = function(tree, navigation) {
-    if (navigation == "auto") {
-        len = length(tree)
-        navigation = ifelse(len <=25, "none",
-                            ifelse(len <= 125, "fourths", "letters"))
-    }
-    keys = sort(tolower(names(tree)))
-    ltrs = unique(substring(keys, 1, 1))
-    if (navigation == "fourths") {
-        findprev = function(chr)
-            max(1, which(ltrs == chr) - 1)
-        beg = keys[1 + as.integer(length(keys)*c(0, .25, .5, .75))]
-        beg = substring(beg, 1, 1)
-        end = ltrs[c(sapply(beg[-1], findprev), length(ltrs))]
-        begnav = paste0("[", toupper(beg), " - ", toupper(end), "](#", beg, ")")
-        beghead = paste0("\n\n### ", toupper(beg), " - ", toupper(end), " {#", beg, "}\n\n")
-        topnav = paste("\n\n### Jump to: <",
-                       paste(begnav, collapse = "> <"), "> {#topnav}\n\n@ ")
-    }
-    else if (navigation == "letters") {
-        beg = ltrs[ltrs %in% letters]
-        begnav = paste0("[", toupper(ltrs), "](#", ltrs, ")")
-        beghead = paste0("\n\n### ", toupper(ltrs), " {#", ltrs, "}\n\n")
-        topnav = paste("\n\n### Jump to: ",
-                       paste(begnav, collapse = " "), " {#topnav}\n\n@ ")
-    }
-    if (navigation != "none") {
-        gototop = "\n\n[Back to top](#topnav)"
-        tree = insert_entry(tree, topnav)
-        tree = insert_entry(tree, paste0(beghead[1], "@", beg[1]))
-        for (i in (1 + seq_along(beghead[-1]))) {
-            tree = insert_entry(tree, paste0(gototop, beghead[i], "@", beg[i]))
-        }
-        tree = insert_entry(tree, paste0(gototop, "@zzzzz"))
-    }
-    tree
-}

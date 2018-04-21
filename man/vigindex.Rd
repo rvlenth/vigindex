@@ -9,14 +9,14 @@
 \usage{
 vigindex(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"),
   target = "vignette-topics.Rmd", navigation = c("auto", "none", "fourths",
-  "letters"), taglines)
+  "letters"), ...)
 
 compile_vi(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"))
 
 add_navigation(tree, navigation = c("auto", "none", "fourths", "letters"))
 
 write_vi(tree, dir = getwd("vignettes"), target = "vignette-topics.Rmd",
-  taglines)
+  taglines, style)
 }
 \arguments{
 \item{dir}{character name of directory where vignettes are stored}
@@ -38,16 +38,25 @@ at four roughly equally-spaced ponts in the index. If \code{"letters"},
 they are placed at the beginning of each new beginning letter. If
 \code{"auto"}, it is determined by the number of main entries.}
 
+\item{...}{additional arguments. In particular, extra arguments in
+\code{vigindex} are passed to \code{write_vi}.}
+
+\item{tree}{An index tree such as is returned by \code{compile_vi};
+see details under Value.}
+
 \item{taglines}{character vector of lines that are added to the
 end of the index. If not supplied, it adds a promotional link for
 the \pkg{vigindex}  package.}
 
-\item{tree}{An index tree such as is returned by \code{compile_vi};
-see details under Value.}
+\item{style}{Additional text to place at the beginning of the index.
+If missing, no additional visible text is added, but a standard
+\code{<style> ... </style>} string is added that should make
+the formatting more attractive (e.g., no bullets).}
 }
 \value{
-Nothing is returned, but the contents of \code{target} are
-  created or altered, and a message indicates when it is complete.
+\code{vigindex} and \code{write_vi} return nothing, but the contents
+  of \code{target} are created or altered, and a message indicates when it is
+  complete.
 
 \code{compile_vi} returns a tree structure with the compiled index.
   It consists of a named \code{list} of nodes. The names serve as sorting
@@ -56,6 +65,9 @@ Nothing is returned, but the contents of \code{target} are
   subentries. \code{link} is the character link to associate with the last
   element of \code{text}. And \code{children} is a named list of nodes of the
   same form as \code{tree}, containing any subsentries.
+
+\code{add_navigation} returns an amended tree with entries for
+    navigation links.
 }
 \description{
 Read indexing tags from a set of R-Markdown vignettes and create
@@ -71,10 +83,10 @@ process, they may call (in order): \code{compile_vi},
 
 If the target file does not exist, one is created.
 The user may edit the target file once created. The function looks
-for an HTML comment line (\code{<!-- (comment) -->}) -- the comment
-must start at the beginning of a line. Everything after this comment
+for a line of the form \code{<div class="vigindex" ...>}.
+Everything after this \code{div}
 line will be replaced by a new set of indexing information each time
-\code{vigindex} is run. Everything before the comment line is retained.
+\code{vigindex} is run. Everything before the \code{div} line is retained.
 }
 \section{Index tags}{
 
@@ -107,6 +119,9 @@ The rules are as follows:
         the entries
   \item However, if there is an \code{@} character in an entry,
         the text that follows \code{@} will be used as the sorting key.
+  \item Entries that begin with a newline character (\code{"\n"}) are
+        treated as body text, rather than bulleted list entries. They
+        should always end with \code{@} and a key.
 }
 Thus, in the above example, the first main entry will be \bold{Birds}
 (in boldface and capitalized per its first appearance),

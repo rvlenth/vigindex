@@ -14,10 +14,10 @@
 #'
 #' If the target file does not exist, one is created.
 #' The user may edit the target file once created. The function looks
-#' for an HTML comment line (\code{<!-- (comment) -->}) -- the comment
-#' must start at the beginning of a line. Everything after this comment
+#' for a line of the form \code{<div class="vigindex" ...>}.
+#' Everything after this \code{div}
 #' line will be replaced by a new set of indexing information each time
-#' \code{vigindex} is run. Everything before the comment line is retained.
+#' \code{vigindex} is run. Everything before the \code{div} line is retained.
 #'
 #' @param dir character name of directory where vignettes are stored
 #' @param vignettes character vector of names of files to index.
@@ -34,11 +34,11 @@
 #'   at four roughly equally-spaced ponts in the index. If \code{"letters"},
 #'   they are placed at the beginning of each new beginning letter. If
 #'   \code{"auto"}, it is determined by the number of main entries.
-#' @param taglines character vector of lines that are added to the
-#'   end of the index. If not supplied, it adds a promotional link for
-#'   the \pkg{vigindex}  package.
-#' @return Nothing is returned, but the contents of \code{target} are
-#'   created or altered, and a message indicates when it is complete.
+#' @param ... additional arguments. In particular, extra arguments in
+#'   \code{vigindex} are passed to \code{write_vi}.
+#' @return \code{vigindex} and \code{write_vi} return nothing, but the contents
+#'   of \code{target} are created or altered, and a message indicates when it is
+#'   complete.
 #'
 #' @export
 #'
@@ -72,6 +72,9 @@
 #'         the entries
 #'   \item However, if there is an \code{@} character in an entry,
 #'         the text that follows \code{@} will be used as the sorting key.
+#'   \item Entries that begin with a newline character (\code{"\n"}) are
+#'         treated as body text, rather than bulleted list entries. They
+#'         should always end with \code{@} and a key.
 #' }
 #' Thus, in the above example, the first main entry will be \bold{Birds}
 #' (in boldface and capitalized per its first appearance),
@@ -93,10 +96,10 @@ vigindex = function(dir = "vignettes",
                     vignettes = dir(dir, pattern = "*.Rmd"),
                     target = "vignette-topics.Rmd",
                     navigation = c("auto", "none", "fourths", "letters"),
-                    taglines) {
-    tree = compile_vi(dir, vignettes)
-    tree = add_navigation(tree, navigation)
-    write_vi(tree, dir, target, taglines)
+                    ...) {
+    tree = compile_vi(dir, vignettes, ...)
+    tree = add_navigation(tree, navigation, ...)
+    write_vi(tree, dir, target, ...)
 }
 
 #' @rdname vigindex
@@ -123,7 +126,8 @@ compile_vi = function(dir = "vignettes",
             link = paste0(vig.html, ent$link)
             for (stg in ent$entries) {
                 if (stg != "") {
-                    tree = insert_entry(tree, strsplit(stg, "!")[[1]], link)
+                    ent = strsplit(gsub("\\\\!", "~ba~ng~", stg), "!")[[1]]
+                    tree = insert_entry(tree, gsub("~ba~ng~", "!", ent), link)
                     n.ent = n.ent + 1
                 }
             }
@@ -133,8 +137,9 @@ compile_vi = function(dir = "vignettes",
     tree
 }
 
-#' @alias add_navigation
 #' @rdname vigindex
+#' @return \code{add_navigation} returns an amended tree with entries for
+#'     navigation links.
 #' @param tree An index tree such as is returned by \code{compile_vi};
 #'        see details under Value.
 #' @export
@@ -178,9 +183,16 @@ add_navigation = function(tree, navigation = c("auto", "none", "fourths", "lette
 }
 
 #' @rdname vigindex
+#' @param taglines character vector of lines that are added to the
+#'   end of the index. If not supplied, it adds a promotional link for
+#'   the \pkg{vigindex}  package.
+#' @param style Additional text to place at the beginning of the index.
+#'   If missing, no additional visible text is added, but a standard
+#'   \code{<style> ... </style>} string is added that should make
+#'   the formatting more attractive (e.g., no bullets).
 #' @export
 write_vi = function(tree, dir = getwd("vignettes"),
-                    target = "vignette-topics.Rmd", taglines) {
+                    target = "vignette-topics.Rmd", taglines, style) {
     targ.file = paste(dir, target, sep = "/")
     cat("\nPreparing index file ...\n")
     if (file.exists(targ.file))
@@ -190,11 +202,14 @@ write_vi = function(tree, dir = getwd("vignettes"),
         pkgname = rev(strsplit(getwd(), "/")[[1]])[1]
         buffer = gsub("<pkgname>", pkgname, default_head)
     }
-    top.end = grep("^<!--", buffer) # Look for 1st comment line
+    top.end = grep("^<div class[ =\"']+vigindex", buffer) # Look for top of index
     if (length(top.end) >= 1)
         buffer = c(buffer[seq_len(top.end[1])], "")
     else
-        buffer = c(buffer, "<!-- end of header -->", "")
+        buffer = c(buffer, "<div class=\"vigindex\">", "")
+    if (missing(style))
+        style = default_style
+    buffer = c(buffer, style, "")
     idx = vi_list2text(tree)
     indent = as.integer(substring(idx, 1, 1)) + 1
     prefix = sapply(0:8, function(i) paste(c(rep("    ", i), "  * "), collapse = ""))
@@ -217,11 +232,12 @@ default_head = c("---", "title: \"Index of vignette topics\"",
      "  %\\VignetteIndexEntry{Index of vignette topics}",
      "  %\\VignetteEngine{knitr::rmarkdown}",
      "  %\\VignetteEncoding{UTF-8}", "---",
-     "<style type=\"text/css\"> ul {list-style-type: none;} </style>",
-     "**Note:** Links take you to the beginnings of sections or subsections ",
-     "where these topics occur.",
-     "<!-- You may edit above but not below here. Do not delete this comment -->")
+     "<div class=\"vigindex\" id=\"Index follows this line; do not edit below\">")
 
+default_style = c('<style type="text/css">',
+                  '  .vigindex ul { list-style-type: none; }',
+                  '  .vigindex a code { color: inherit; }',
+                  '</style>')
 
 # Create a new vignette-index entry
 #
@@ -250,14 +266,16 @@ make_key = function(text) {
         substring(text, 1 + regexpr("@", text))
     else
         tolower(gsub("`||\\*", "", text))
-    ifelse(nchar(key) > 0, key, " ")
+    rtn = ifelse(nchar(key) > 0, key, " ")
 }
 
 # insert an index entry use this like:
 # main = insert_entry(main, tl, link)
 insert_entry = function(parent, text_list, link = list()) {
-    key = make_key(text_list[1])
-    txt = strsplit(text_list[1], "@")[[1]][1] # strip any "@key" portion
+    txt = gsub("\\\\@", "~at~sign~", text_list[1])
+    key = make_key(txt)
+    txt = strsplit(txt, "@")[[1]][1] # strip any "@key" portion
+    txt = gsub("~at~sign~", "@", txt)
 
     if(length(text_list) == 1) {
         vi = vientry(txt, link)
@@ -328,7 +346,9 @@ find_vientries = function(buffer) {
         text = paste(buffer[beg[i]:end[i]], collapse = "; ")
         text = substring(text, 7 + regexpr("@index", text))
         text = gsub("-->", "", text)
+        text = gsub("\\\\;", "~semi~colon~", text)   # handle \;
         entries = trimws(strsplit(text, ";")[[1]])
+        entries = gsub("~semi~colon~", ";", entries)
         list(entries = entries, link = anchors[ai])
     })
 }

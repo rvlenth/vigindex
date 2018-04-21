@@ -1,0 +1,210 @@
+---
+title: "Sample vignette with index"
+author: "Russ Lenth"
+output: rmarkdown::html_document
+---
+
+<!-- @index Sample vignette -->
+This vignette serves as an example of a vignette containing index entries, 
+and also as one that has its own index at the end.
+
+## Introduction {#intro}
+<!-- @index Introduction; Index tags!Inserting;  -->
+The **vigindex** package provides for creating an index of one or more vignettes
+that were created using R Markdown and are formatted as HTML.
+
+In order for a vignette to be indexed, you need to add two things to the Markdown file:
+
+  1. Add anchor names to sections of the document. 
+  2. Add special comment lines containing index information. 
+
+The source file for this vignette serves as an example. Note that this introductory 
+section begins with these lines:
+
+    ## Introduction {#intro}
+    <!-- @index Introduction; Index tags!Inserting -->
+
+The `#intro` anchor defines a place where the index entry can link to, and the
+subsequent comment line defines two index entries that will be linked to that location.
+One is the word "Introduction", and the other is an entry "Index tags" with a subentry
+"Inserting" where the link will be defined.
+
+Once these elements are in place in the vignette source files, the `vigindex()` 
+function will read the vignettes and create the index. More details come later.
+
+## Placement of anchors {#anchors}
+<!-- @index Anchor placement -->
+Each entry in an `@index` line will link to the most recent anchor in the source file,
+or to the top of the file if there are no preceding anchors (note the first `@index` line in this vignette).
+
+####### {#phantom}
+<!-- @index Phantom sections -->
+Since R Markdown only allows anchors to be placed with sections (Markdown lines
+that begin with one or more `#` characters), all index links will take you to
+the beginning of a section. This is a limitation, but if you are careful to
+include a lot of sectioning in a vignette, it is usually not a very serious one.
+However, when a later reference point is needed where a section heading is
+not desired, just create an invisible 7th-level section (no title) like this:
+
+    ####### {#phantom}
+
+After formatting, this will just look like a paragraph break.
+
+
+## Rules for index entries {#rules}
+<!-- @index Index tags!Rules; `\@index` keyword@index key -->
+As mentioned earlier, index entries are placed withing HTML comment lines.
+But there are some fairly narrow requirements:
+
+  * The comments *must* start at the beginning of a line, with no preceding spaces.
+  * The entries are of the form `<!-- @index entry1; entry2; ... -->`.
+  * There *must* be a space before and after `@index` and before the closing `-->`,
+    and `@index` *must* be all lower-case.
+  * The comment may, however, extend over more than one line.
+  * Entries on the same line are delimited by `;` (semicolon).
+  * subentries are created by inserting `!` (bang) character(s). 
+    There may be sub-subentries, sub-sub-subentries, etc. as much as
+    eight levels deep (way deeper than you'll want).
+
+### Ordering and formatting of entries {#formatting}
+<!-- @index Index entries!Formatting; Index entries!Ordering; Sorting -->
+Index entries and subentries are sorted according to a derived sorting key. By
+default, the sorting key is obtained by stripping away any formatting markup for
+code, italics, and boldface, and converting to lower case. For example, entries
+of `**ggplot2** package`, `Graphics`, `GUI`, and `guidelines` are sorted in the
+order shown. If there is another index entry elsewhere for `Ggplot2 package`,
+then both it and the one for `**ggplot2** package` will have exactly the same
+sorting key (`ggplot2 package`), so they will appear as the same index entry
+with two links. The way it is formatted in is the way it first appeared as the
+index was being compiled.
+
+The user may override the ordering by specifying a sorting key after an `@`
+sign. For example, consider the index entries `Cars!Ford`, `Cars!Volvo`,
+`Cars!Chevrolet`, and `Automobiles@cars!Other makes@zzz` that occur in this
+order in various places. This will result in this index excerpt:
+```
+    Cars
+        Chevrolet
+        Ford
+        Volvo
+        Other makes
+```
+All top-level entries have the same sorting key `cars`, so they all come
+together. By the way, if that last entry had come first, then all four of them
+would have shown up under the main entry of Automobiles instead of Cars, because
+that is the way it was formatted the first time the `cars` key appeared.
+
+
+
+### Special characters {#special}
+<!-- @index Special characters (\; \@ \!); &euro\; sign@euro  -->
+You may have noticed that the characters `@`, `;`, and `!` have special meanings
+in index entries. If you actually want those characters to appear in index entries,
+use `\@`, `;`, or `\!` instead.
+
+For other special characters, you may use HTML symbol definitions. For instance,
+the string `&euro;` will display as a Euro symbol in HTML. In thuis section,
+we have an index entry of `&euro\; sign@euro` (note that `\;` is needed in place of `;`).
+This displays  as "&euro; sign" in the index, with the sorting key `euro`.
+
+## Using `vigindex()` {#vigindex}
+<!-- @index `vigindex` function; `vignette-topics.Rmd`; Index!in separate file@sep -->
+The `vigindex()` function reads vignette files and creates the index in Markdown format.
+When called with no arguments, it defaults to reading all the `.Rmd` files in the `vignettes` subdirectory of the current working directory, and creates a new vignette source file named `vignette-topics.Rmd` in the same directory. This works pretty well for most packages; and the results of the blank `vigindex()` call may be seen in the [`vignette-topics`](vignette-topics.html) vignette in this package.
+
+####### {#target}
+<!-- @index `target` file; Index!at bottom of vignette@bot -->
+It is possible to specify a different target file as the `target` argument in `vigindex`.
+The vignette you are reading right now was created using the call
+
+    vigindex(target = "example.Rmd")
+
+Either way, if the target file does not already exist, one is created. The
+target file may subsequently be edited by the user. However, it is important to
+preserve this special line in the target file:
+
+    <div class = "vigindex">
+
+The index will be written just after this line---replacing anything that was
+previously there. But everything above the `div` line may be edited as desired,
+and that part will not be altered by `vigindex()`.
+
+## Finer points 
+### Steps in creating an index {#steps}
+The `vigindex()` function actually performs three main steps, which the user may
+choose to do separately for finer control. 
+
+<!-- @index `compile_vi`; Tree structure; 
+        `add_navigation`; Navigation; `write_vi` -->
+First, it runs `compile_vi()`, which reads the vignette files and creates 
+a tree structure with the index information. The tree is a named list
+of nodes, the names being the sorting keys. Each node consists of a list
+of three elements: the text to display, the associated link(s), and
+a named list of child nodes if there are subentries.
+
+Second, it runs `add_navigation()`, which divides the index into
+sections and adds corresponding top-level nodes with links so the user can move around
+the index. The default settings
+create no navigation for short indexes, four index sections for medium-sized indexes,
+and a section for every letter of the alphabet for large indexes.
+
+Third, it runs `write_vi`, which writes the index in sorted order and format
+to the target file.
+
+More details on these functions are provided on the help page.
+
+### Index formatting {#format}
+<!-- @index Formatting; Style specifications; CSS needs -->
+The index is actually formatted as a bulleted list (the `ul` tag in HTML). 
+This facilitates 
+appropriate indentation of entries and subentries. But if actual bullets 
+are present, they are unattractive. Additionally, sometimes linked text formatted 
+as code does get colored the same way as other text. The `write_vi()` function
+writes appropriate HTML styling to the file in an attempt to fix these issues,
+and you will see that code at the beginning of the generated index. If you need
+something different there, you can specify it as the `style` argument in 
+`vigindex()` (or in `write_vi()`). For some reason, this works fine
+with `rmarkdown::html_document` but not with `rmarkdown::html_vignette`.
+
+
+
+## Index
+<!-- When I first created this file, there was nothing below the following <div> line -->
+<div class = "vigindex" id = "Index begins below">
+
+<style type="text/css">
+  .vigindex ul { list-style-type: none; }
+  .vigindex a code { color: inherit; }
+</style>
+
+  * [`add_navigation`](example.html#steps)
+  * [Anchor placement](example.html#anchors)
+  * [`compile_vi`](example.html#steps)
+  * [CSS needs](example.html#format)
+  * [&euro; sign](example.html#special)
+  * [Formatting](example.html#format)
+  * Index
+      * [at bottom of vignette](example.html#target)
+      * [in separate file](example.html#vigindex)
+  * Index entries
+      * [Formatting](example.html#formatting)
+      * [Ordering](example.html#formatting)
+  * [`@index` keyword](example.html#rules)
+  * Index tags
+      * [Inserting](example.html#intro)
+      * [Rules](example.html#rules)
+  * [Introduction](example.html#intro)
+  * [Navigation](example.html#steps)
+  * [Phantom sections](example.html#phantom)
+  * [Sample vignette](example.html)
+  * [Sorting](example.html#formatting)
+  * [Special characters (; @ !)](example.html#special)
+  * [Style specifications](example.html#format)
+  * [`target` file](example.html#target)
+  * [Tree structure](example.html#steps)
+  * [`vigindex` function](example.html#vigindex)
+  * [`vignette-topics.Rmd`](example.html#vigindex)
+  * [`write_vi`](example.html#steps)
+
+
+*Index generated by the [vigindex](https://github.com/rvlenth/vigindex) package.*

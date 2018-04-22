@@ -2,5 +2,6 @@
 
 export(add_navigation)
 export(compile_vi)
+export(html_vigindex)
 export(vigindex)
 export(write_vi)

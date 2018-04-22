@@ -1,7 +1,9 @@
 ---
 title: "Index of vignette topics"
 author: "vigindex package"
-output: rmarkdown::html_document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: vigindex::html_vigindex
+    
 vignette: >
   %\VignetteIndexEntry{Index of vignette topics}
   %\VignetteEngine{knitr::rmarkdown}
@@ -9,17 +11,13 @@ vignette: >
 ---
 <div class="vigindex" id="Index follows this line; do not edit below">
 
-<style type="text/css">
-  .vigindex ul { list-style-type: none; }
-  .vigindex a code { color: inherit; }
-</style>
-
   * [`add_navigation`](example.html#steps)
   * [Anchor placement](example.html#anchors)
   * [`compile_vi`](example.html#steps)
-  * [CSS needs](example.html#format)
+  * [CSS](example.html#css)
   * [&euro; sign](example.html#special)
   * [Formatting](example.html#format)
+  * [`html_vigindex`](example.html#format)
   * Index
       * [at bottom of vignette](example.html#target)
       * [in separate file](example.html#vigindex)
@@ -36,9 +34,9 @@ vignette: >
   * [Sample vignette](example.html)
   * [Sorting](example.html#formatting)
   * [Special characters (; @ !)](example.html#special)
-  * [Style specifications](example.html#format)
   * [`target` file](example.html#target)
   * [Tree structure](example.html#steps)
+  * [`vigi-extras.css`](example.html#css)
   * [`vigindex` function](example.html#vigindex)
   * [`vignette-topics.Rmd`](example.html#vigindex)
   * [`write_vi`](example.html#steps)

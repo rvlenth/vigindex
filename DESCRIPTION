@@ -2,7 +2,7 @@ Package: vigindex
 Type: Package
 Title: Index of Topics in Package Vignettes
 Version: 0.6.0
-Date: 2018-04-08
+Date: 2018-04-21
 Authors@R: c(person("Russell", "Lenth", role = c("aut", "cre", "cph"), 
     email = "russell-lenth@uiowa.edu"))
 Description: Reads special indexing tags from R Markdown vignette

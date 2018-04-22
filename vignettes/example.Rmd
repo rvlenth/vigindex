@@ -1,7 +1,7 @@
 ---
 title: "Sample vignette with index"
 author: "Russ Lenth"
-output: rmarkdown::html_document
+output: vigindex::html_vigindex
 ---
 
 <!-- @index Sample vignette -->
@@ -154,28 +154,30 @@ to the target file.
 More details on these functions are provided on the help page.
 
 ### Index formatting {#format}
-<!-- @index Formatting; Style specifications; CSS needs -->
-The index is actually formatted as a bulleted list (the `ul` tag in HTML). 
-This facilitates 
-appropriate indentation of entries and subentries. But if actual bullets 
-are present, they are unattractive. Additionally, sometimes linked text formatted 
-as code does get colored the same way as other text. The `write_vi()` function
-writes appropriate HTML styling to the file in an attempt to fix these issues,
-and you will see that code at the beginning of the generated index. If you need
-something different there, you can specify it as the `style` argument in 
-`vigindex()` (or in `write_vi()`). For some reason, this works fine
-with `rmarkdown::html_document` but not with `rmarkdown::html_vignette`.
+<!-- @index Formatting; `html_vigindex` -->
+The index is actually formatted as a bulleted list (the `ul` tag in HTML). This
+facilitates appropriate indentation of entries and subentries. But if actual
+bullets are present, they are unattractive. Additionally, text formatted as code
+does not always inherit link colors, making it difficult to tell that a verbatim
+keyword in the index has a link. The provided function `html_vigindex` is
+basically the same as `rmarkdown::html_vignette`, but with extra styles for the
+index section to suppress bullets and show link colors for code. To use it,
+simply specify `vigindex::html_vigindex` as the `output` specification in the
+vignette header (as is done in the source file for this vignette).
+
+####### {#css}
+<!-- @index `vigi-extras.css`; CSS -->
+If you prefer a different vignette style, including the `CSS` 
+specifications in `system.file("resources", "vigi-extras.css", package = "vigindex")`
+will probably do the trick in formatting the index attractively.
+
+
 
 
 
 ## Index
 <!-- When I first created this file, there was nothing below the following <div> line -->
 <div class = "vigindex" id = "Index begins below">
-
-<style type="text/css">
-  .vigindex ul { list-style-type: none; }
-  .vigindex a code { color: inherit; }
-</style>
 
   * [`add_navigation`](example.html#steps)
   * [Anchor placement](example.html#anchors)

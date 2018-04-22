@@ -1,0 +1,10 @@
+/*
+  CSS extras for use with vigindex
+     These are intended to ensure that bullets are suppressed
+     and that link colors carry into <code> elements
+*/
+
+.vigindex ul { list-style-type: none; }
+.vigindex ul li { list-style: none; }
+.vigindex a code { color: inherit; }
+.vigindex li code {color: inherit; }

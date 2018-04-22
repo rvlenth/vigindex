@@ -4,7 +4,7 @@ author: "Russell V. Lenth"
 date: "April 6, 2018"
 output: html_document
 ---
-This package has one function, `vigindex`, that allows a package developer
+This package allows a package developer
 to add an index of topics covered in Markdown vignettes. Special tags may
 be added to the vignette `.Rmd` files, and those tags are then used to 
 create entries in the index. 

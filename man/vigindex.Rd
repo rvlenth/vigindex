@@ -16,7 +16,7 @@ compile_vi(dir = "vignettes", vignettes = dir(dir, pattern = "*.Rmd"))
 add_navigation(tree, navigation = c("auto", "none", "fourths", "letters"))
 
 write_vi(tree, dir = getwd("vignettes"), target = "vignette-topics.Rmd",
-  taglines, style)
+  taglines, ...)
 }
 \arguments{
 \item{dir}{character name of directory where vignettes are stored}

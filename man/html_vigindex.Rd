@@ -8,16 +8,17 @@ html_vigindex(css = "builtin", ...)
 }
 \arguments{
 \item{css}{name(s) of CSS file(s) to include. If \code{"builtin"}, it will default
-to the default used by \code{rmarkdown::html_vignette}, plus the
+to the stylesheet used by \code{rmarkdown::html_vignette}, plus the
+extra styles in
 \code{system.file("resources", "vigi-extras.css", package = "vigindex")}.
-If something else is specified, \emph{neither} of these are loaded.}
+The latter may be useful for adding appropriate bullet-suppression and
+link-coloring to another style.}
 
 \item{...}{additional arguments passed to \code{\link[rmarkdown]{html_vignette}}}
 }
 \description{
-This is a variant of \code{rmarkdown::html_vignette} that includes
+This is a variant of \code{\link[rmarkdown]{html_vignette}} that includes
 extra style definitions to format the index in the same way, but with
 bullets suppressed and visible link coloring for \code{<code>}-tagged
-text. See the documentation in the \code{rmarkdown} package for
-more details.
+text.
 }

@@ -280,6 +280,8 @@ vi_list2text = function(vi, indent = 0) {
     stg = character(0)
     vi = vi[order(tolower(names(vi)))]
     for (ent in vi) {
+        if (length(ent$link) > 1)
+            ent = push_down_links(ent)
         if (length(ent$link) == 0) {
             if (startsWith(ent$text, "\n"))
                 stg = c(stg, paste0("9", ent$text))
@@ -288,7 +290,7 @@ vi_list2text = function(vi, indent = 0) {
         }
         else if (length(ent$link) == 1)
             stg = c(stg, paste0(indent, "[", ent$text, "](", ent$link, ")"))
-        else {
+        else { # currently this won't happen since we push them down. But save just in case
             nlks = paste0("[", seq_along(ent$link), "](", ent$link, ")")
             links = paste0(indent, ent$text, ": ", paste(nlks, collapse = ", "))
             stg = c(stg, links)
@@ -297,6 +299,22 @@ vi_list2text = function(vi, indent = 0) {
             stg = c(stg, vi_list2text(ent$children, indent + 1))
     }
     stg
+}
+
+# Push down multiple links into subentries
+push_down_links = function(entry) {
+    lnk = unique(entry$link)
+    if (length(lnk) < 2)
+       entry$link = lnk
+    else {
+        ###txt = lapply(strsplit(lnk, "#"), function(.) sub(".html", "", .))
+        txt = sub(".html", "", lnk)
+        txt = paste0("in *", sub("#", ": ", txt), "*@", txt)
+        for (i in seq_along(lnk))
+            entry$children = insert_entry(entry$children, txt[[i]], lnk[i])
+        entry$link = list()
+    }
+    entry
 }
 
 # Find index entries in a buffer. These look like:

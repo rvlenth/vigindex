@@ -102,30 +102,12 @@ files, following a special format illustrated in the following example:
     ... lines of text ...
 <!-- @index Raptors; birds!Owls!others@zzz        -->
 }
-The rules are as follows:
-\enumerate{
-  \item The keyword \code{@index} signals there are index tags
-  \item There may be several index items on a line, separated
-        by semicolons (\code{;}).
-  \item The comment may extend over more than one line -- do not
-        repeat the \code{@index} keyword
-  \item Entries are separated from subentries using the bang
-        (\code{!}) character (they may be nested as much as 8 deep).
-  \item Markdown formatting may be used in entries
-  \item When several identical entries exist, the case and formatting
-        is determined by its first appearance
-  \item Entries are sorted alphabetically, at each level,
-        based on keys derived by stripping case and formatting from
-        the entries
-  \item However, if there is an \code{@} character in an entry,
-        the text that follows \code{@} will be used as the sorting key.
-  \item Entries that begin with a newline character (\code{"\n"}) are
-        treated as body text, rather than bulleted list entries. They
-        should always end with \code{@} and a key.
-}
-Thus, in the above example, the first main entry will be \bold{Birds}
+Entries on the same line are separated by \code{;}, and subentries are delineated
+by \code{!}. Sorting is done without regard to capitalization or formatting,
+but a different sorting key may be appended after an \code{@} symbol. Accordingly,
+with the above examples, the first main entry will be \bold{Birds}
 (in boldface and capitalized per its first appearance),
-with a subentry for Owls, with subentries for Barred, Great horned, Screech,
+with a subentry for Owls, in turn with subentries for Barred, Great horned, Screech,
 and others (last because of the \code{@zzz}). The next main entry will be
 \code{print.owls}, and finally, Raptors.
 }
@@ -137,8 +119,7 @@ form \code{\{#anchor\}}) found
 in the document, or to the top of the file if no anchors occur
 before the index tag.
 
-Because Markdown only allows anchors at headings,
-the links will be fairly crude, and users are advised to use
-a lot of sectioning in writing vignettes.
+See \code{vignette("example", package = "vigindex")} for examples and more
+details.
 }
 
